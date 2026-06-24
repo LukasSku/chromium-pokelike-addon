@@ -216,18 +216,23 @@ function updateStartButton() {
 
 // ─── Start / Stop Toggle ───
 btnStart.addEventListener('click', () => {
-  isRunning = !isRunning;
+  chrome.storage.local.get(['status'], (data) => {
+    isRunning = !isRunning;
 
-  const updates = { isRunning };
-  if (isRunning) {
-    updates.status = 'searching';
-    updates.foundPokemon = null;
-  } else {
-    updates.status = 'idle';
-  }
+    const updates = { isRunning };
+    if (isRunning) {
+      updates.status = 'searching';
+      updates.foundPokemon = null;
+      if (data.status === 'found') {
+        updates.runCount = 0;
+      }
+    } else {
+      updates.status = 'idle';
+    }
 
-  chrome.storage.local.set(updates);
-  updateStartButton();
+    chrome.storage.local.set(updates);
+    updateStartButton();
+  });
 });
 
 // ─── Reset Counter ───

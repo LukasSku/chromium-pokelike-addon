@@ -974,12 +974,15 @@
 
     // Toggle running state
     actionBtn.addEventListener('click', () => {
-      chrome.storage.local.get(['isRunning'], (res) => {
+      chrome.storage.local.get(['isRunning', 'status'], (res) => {
         const nextRunning = !res.isRunning;
         const updates = { isRunning: nextRunning };
         if (nextRunning) {
           updates.status = 'searching';
           updates.foundPokemon = null;
+          if (res.status === 'found') {
+            updates.runCount = 0;
+          }
         } else {
           updates.status = 'idle';
         }
