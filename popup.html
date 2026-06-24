@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokelike Shiny Hunter</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-icon">★</div>
+    <div class="header-text">
+      <h1>Shiny Hunter</h1>
+      <span class="header-sub">pokelike.xyz</span>
+    </div>
+  </header>
+
+  <!-- Connection Status -->
+  <div id="connection-banner" class="connection-banner connection-banner--disconnected">
+    <span id="connection-icon">⚠️</span>
+    <span id="connection-text">Nicht verbunden – pokelike.xyz öffnen & Seite neu laden</span>
+  </div>
+
+  <!-- Add Pokémon Input -->
+  <section class="section">
+    <label class="section-label" for="pokemon-input">Pokémon hinzufügen</label>
+    <div class="input-row">
+      <input
+        type="text"
+        id="pokemon-input"
+        placeholder="z.B. Pikachu"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button id="btn-add" class="btn-add" title="Hinzufügen">+</button>
+    </div>
+  </section>
+
+  <!-- Target Pokémon List -->
+  <section class="section">
+    <label class="section-label">Ziel-Pokémon <span id="target-count" class="badge">0</span></label>
+    <div id="pokemon-list" class="pokemon-list">
+      <div class="empty-state" id="empty-state">
+        <span class="empty-icon">🔍</span>
+        <span>Noch keine Pokémon hinzugefügt</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Status -->
+  <section class="section">
+    <div class="status-card" id="status-card">
+      <div class="status-row">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">Bereit</span>
+      </div>
+      <div class="status-stats">
+        <div class="stat">
+          <span class="stat-label">Runs</span>
+          <span class="stat-value" id="run-count">0</span>
+        </div>
+        <div class="stat" id="found-stat" style="display: none;">
+          <span class="stat-label">Gefunden</span>
+          <span class="stat-value stat-value--shiny" id="found-name">–</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section class="section section--controls">
+    <button id="btn-start" class="btn-primary-action">
+      <span class="btn-icon">▶</span>
+      <span class="btn-label">Suche starten</span>
+    </button>
+    <button id="btn-reset-counter" class="btn-secondary-action" title="Run-Counter zurücksetzen">
+      ↺ Counter Reset
+    </button>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>
