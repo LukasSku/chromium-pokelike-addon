@@ -506,6 +506,88 @@
             }
           }
         }
+
+        // ── Game Over Screen (Play Again) ──
+        else if (isScreenActive('gameover-screen')) {
+          log('🔍 Game Over screen active, clicking Play Again...');
+          await delay(200);
+          const playAgainBtn = document.getElementById('btn-retry');
+          if (playAgainBtn && playAgainBtn.offsetParent !== null) {
+            log('👉 Clicking Play Again button');
+            playAgainBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
+
+        // ── Battle Screen (Defeat Continue) ──
+        else if (isScreenActive('battle-screen')) {
+          const continueBtn = document.getElementById('btn-continue-battle');
+          if (continueBtn && continueBtn.offsetParent !== null) {
+            log('🔍 Defeat detected! Clicking Continue Battle button...');
+            continueBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
+
+        // ── Move Tutor Screen ──
+        else if (document.getElementById('btn-skip-tutor') && document.getElementById('btn-skip-tutor').offsetParent !== null) {
+          log('🔍 Move Tutor screen active or skip tutor button visible...');
+          await delay(200);
+          const skipBtn = document.getElementById('btn-skip-tutor');
+          if (skipBtn && skipBtn.offsetParent !== null) {
+            log('👉 Clicking Skip Tutor button');
+            skipBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
+
+        // ── Shiny Screen ──
+        else if (isScreenActive('shiny-screen') || (document.getElementById('btn-skip-shiny') && document.getElementById('btn-skip-shiny').offsetParent !== null)) {
+          log('🔍 Shiny screen active or skip shiny button visible...');
+          await delay(200);
+          const skipBtn = document.getElementById('btn-skip-shiny');
+          if (skipBtn && skipBtn.offsetParent !== null) {
+            log('👉 Clicking Skip Shiny button');
+            skipBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
+
+        // ── Item / Event Screen ──
+        else if (isScreenActive('item-screen') || (document.getElementById('btn-skip-item') && document.getElementById('btn-skip-item').offsetParent !== null)) {
+          log('🔍 Item/Event screen active or skip button visible...');
+          await delay(200);
+          const skipBtn = document.getElementById('btn-skip-item');
+          if (skipBtn && skipBtn.offsetParent !== null) {
+            log('👉 Clicking Skip button');
+            skipBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
+
+        // ── Catch Screen (Wild Pokemon) ──
+        else if (isScreenActive('catch-screen') || (document.getElementById('btn-skip-catch') && document.getElementById('btn-skip-catch').offsetParent !== null)) {
+          log('🔍 Catch screen active or skip catch button visible...');
+          await delay(200);
+          const skipBtn = document.getElementById('btn-skip-catch');
+          if (skipBtn && skipBtn.offsetParent !== null) {
+            log('👉 Clicking Skip (flee) button');
+            skipBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
         
         // ── Map Screen ──
         else if (isScreenActive('map-screen')) {
@@ -529,88 +611,6 @@
             await delay(1000);
           } else {
             log('⚠️ No clickable map node found');
-            await delay(500);
-          }
-        }
-
-        // ── Catch Screen (Wild Pokemon) ──
-        else if (isScreenActive('catch-screen') || (document.getElementById('btn-skip-catch') && document.getElementById('btn-skip-catch').offsetParent !== null)) {
-          log('🔍 Catch screen active or skip catch button visible...');
-          await delay(200);
-          const skipBtn = document.getElementById('btn-skip-catch');
-          if (skipBtn && skipBtn.offsetParent !== null) {
-            log('👉 Clicking Skip (flee) button');
-            skipBtn.click();
-            await delay(1000);
-          } else {
-            await delay(500);
-          }
-        }
-
-        // ── Item / Event / Move Tutor Screen ──
-        else if (isScreenActive('item-screen') || (document.getElementById('btn-skip-item') && document.getElementById('btn-skip-item').offsetParent !== null)) {
-          log('🔍 Item/Event/Tutor screen active or skip button visible...');
-          await delay(200);
-          const skipBtn = document.getElementById('btn-skip-item');
-          if (skipBtn && skipBtn.offsetParent !== null) {
-            log('👉 Clicking Skip button');
-            skipBtn.click();
-            await delay(1000);
-          } else {
-            await delay(500);
-          }
-        }
-
-        // ── Shiny Screen ──
-        else if (isScreenActive('shiny-screen') || (document.getElementById('btn-skip-shiny') && document.getElementById('btn-skip-shiny').offsetParent !== null)) {
-          log('🔍 Shiny screen active or skip shiny button visible...');
-          await delay(200);
-          const skipBtn = document.getElementById('btn-skip-shiny');
-          if (skipBtn && skipBtn.offsetParent !== null) {
-            log('👉 Clicking Skip Shiny button');
-            skipBtn.click();
-            await delay(1000);
-          } else {
-            await delay(500);
-          }
-        }
-
-        // ── Move Tutor Screen ──
-        else if (document.getElementById('btn-skip-tutor') && document.getElementById('btn-skip-tutor').offsetParent !== null) {
-          log('🔍 Move Tutor screen active or skip tutor button visible...');
-          await delay(200);
-          const skipBtn = document.getElementById('btn-skip-tutor');
-          if (skipBtn && skipBtn.offsetParent !== null) {
-            log('👉 Clicking Skip Tutor button');
-            skipBtn.click();
-            await delay(1000);
-          } else {
-            await delay(500);
-          }
-        }
-
-        // ── Battle Screen (Defeat Continue) ──
-        else if (isScreenActive('battle-screen')) {
-          const continueBtn = document.getElementById('btn-continue-battle');
-          if (continueBtn && continueBtn.offsetParent !== null) {
-            log('🔍 Defeat detected! Clicking Continue Battle button...');
-            continueBtn.click();
-            await delay(1000);
-          } else {
-            await delay(500);
-          }
-        }
-
-        // ── Game Over Screen (Play Again) ──
-        else if (isScreenActive('gameover-screen')) {
-          log('🔍 Game Over screen active, clicking Play Again...');
-          await delay(200);
-          const playAgainBtn = document.getElementById('btn-retry');
-          if (playAgainBtn && playAgainBtn.offsetParent !== null) {
-            log('👉 Clicking Play Again button');
-            playAgainBtn.click();
-            await delay(1000);
-          } else {
             await delay(500);
           }
         }
