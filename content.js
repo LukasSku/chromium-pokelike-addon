@@ -588,6 +588,32 @@
             await delay(500);
           }
         }
+
+        // ── Battle Screen (Defeat Continue) ──
+        else if (isScreenActive('battle-screen')) {
+          const continueBtn = document.getElementById('btn-continue-battle');
+          if (continueBtn && continueBtn.offsetParent !== null) {
+            log('🔍 Defeat detected! Clicking Continue Battle button...');
+            continueBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
+
+        // ── Game Over Screen (Play Again) ──
+        else if (isScreenActive('gameover-screen')) {
+          log('🔍 Game Over screen active, clicking Play Again...');
+          await delay(200);
+          const playAgainBtn = document.getElementById('btn-retry');
+          if (playAgainBtn && playAgainBtn.offsetParent !== null) {
+            log('👉 Clicking Play Again button');
+            playAgainBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
         
         else {
           await delay(300);
