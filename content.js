@@ -348,9 +348,8 @@
     const nodes = Array.from(document.querySelectorAll('g.map-node.map-node--clickable'));
     if (nodes.length === 0) return null;
 
-    // Bevorzugte Keywords (case-insensitive)
-    const priorityKeywords = [
-      'grass',
+    // Trainer-Keywords (höchste Priorität - Tier 1)
+    const trainerKeywords = [
       'fisherman',
       'fisher',
       'firebreather',
@@ -367,6 +366,9 @@
       'policeman',
       'bug-catcher'
     ];
+
+    // Grass-Keywords (mittlere Priorität - Tier 2)
+    const grassKeywords = ['grass'];
 
     // Helper to get coordinates
     const getCoords = (el) => {
@@ -395,21 +397,37 @@
       return { x, y };
     };
 
-    // Helper to check if node contains prioritized image
-    const isPriorityNode = (el) => {
+    // Helper to get priority tier
+    const getPriorityTier = (el) => {
       const img = el.querySelector('image');
-      if (!img) return false;
+      if (!img) return 3; // Tier 3: Normal
       const href = img.getAttribute('href') || img.getAttribute('xlink:href') || '';
       const hrefLower = href.toLowerCase();
       
-      return priorityKeywords.some(keyword => hrefLower.includes(keyword));
+      if (trainerKeywords.some(keyword => hrefLower.includes(keyword))) {
+        return 1; // Tier 1: Trainer
+      }
+      if (grassKeywords.some(keyword => hrefLower.includes(keyword))) {
+        return 2; // Tier 2: Grass
+      }
+      return 3; // Tier 3: Normal
     };
 
-    // Split into priority and normal nodes
-    const priorityNodes = nodes.filter(isPriorityNode);
-    const selectedList = priorityNodes.length > 0 ? priorityNodes : nodes;
+    // Split nodes into priority tiers
+    const trainerNodes = nodes.filter(n => getPriorityTier(n) === 1);
+    const grassNodes = nodes.filter(n => getPriorityTier(n) === 2);
 
-    log(`🔍 Money Farm map choice: ${nodes.length} clickable node(s), ${priorityNodes.length} priority node(s)`);
+    let selectedList;
+    if (trainerNodes.length > 0) {
+      selectedList = trainerNodes;
+      log(`🔍 Money Farm map choice: choosing from ${trainerNodes.length} trainer node(s) (Tier 1)`);
+    } else if (grassNodes.length > 0) {
+      selectedList = grassNodes;
+      log(`🔍 Money Farm map choice: choosing from ${grassNodes.length} grass node(s) (Tier 2)`);
+    } else {
+      selectedList = nodes;
+      log(`🔍 Money Farm map choice: choosing from all ${nodes.length} clickable node(s) (Tier 3)`);
+    }
 
     // Sort by Y coordinate descending (furthest down), then X coordinate ascending (leftmost)
     selectedList.sort((a, b) => {
