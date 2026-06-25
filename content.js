@@ -557,6 +557,20 @@
             await delay(500);
           }
         }
+
+        // ── Move Tutor Screen ──
+        else if (document.getElementById('btn-skip-tutor') && document.getElementById('btn-skip-tutor').offsetParent !== null) {
+          log('🔍 Move Tutor screen active or skip tutor button visible...');
+          await delay(200);
+          const skipBtn = document.getElementById('btn-skip-tutor');
+          if (skipBtn && skipBtn.offsetParent !== null) {
+            log('👉 Clicking Skip Tutor button');
+            skipBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
         
         else {
           await delay(300);
