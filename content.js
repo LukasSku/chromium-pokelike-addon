@@ -517,31 +517,29 @@
         }
 
         // ── Catch Screen (Wild Pokemon) ──
-        else if (isScreenActive('catch-screen')) {
-          log('🔍 Catch screen active, clicking skip (flee)...');
+        else if (isScreenActive('catch-screen') || (document.getElementById('btn-skip-catch') && document.getElementById('btn-skip-catch').offsetParent !== null)) {
+          log('🔍 Catch screen active or skip catch button visible...');
           await delay(200);
           const skipBtn = document.getElementById('btn-skip-catch');
-          if (skipBtn) {
+          if (skipBtn && skipBtn.offsetParent !== null) {
             log('👉 Clicking Skip (flee) button');
             skipBtn.click();
             await delay(1000);
           } else {
-            log('⚠️ Skip catch button not found on catch screen');
             await delay(500);
           }
         }
 
-        // ── Item / Event Screen ──
-        else if (isScreenActive('item-screen')) {
-          log('🔍 Item screen active, checking for skip button...');
+        // ── Item / Event / Move Tutor Screen ──
+        else if (isScreenActive('item-screen') || (document.getElementById('btn-skip-item') && document.getElementById('btn-skip-item').offsetParent !== null)) {
+          log('🔍 Item/Event/Tutor screen active or skip button visible...');
           await delay(200);
           const skipBtn = document.getElementById('btn-skip-item');
-          if (skipBtn) {
-            log('👉 Clicking Skip item button');
+          if (skipBtn && skipBtn.offsetParent !== null) {
+            log('👉 Clicking Skip button');
             skipBtn.click();
             await delay(1000);
           } else {
-            log('⚠️ Skip button not found on item screen');
             await delay(500);
           }
         }
