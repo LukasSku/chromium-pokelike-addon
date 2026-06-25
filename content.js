@@ -352,15 +352,20 @@
     const priorityKeywords = [
       'grass',
       'fisherman',
+      'fisher',
       'firebreather',
+      'fire-spitter',
       'grunt',
-      'team rocket grunt',
+      'team-rocket',
+      'old-guy',
       'gentleman',
       'scientist',
+      'ace-trainer',
       'ace',
-      'ace trainer',
       'hiker',
-      'officer'
+      'officer',
+      'policeman',
+      'bug-catcher'
     ];
 
     // Helper to get coordinates
