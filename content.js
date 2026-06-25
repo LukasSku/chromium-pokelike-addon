@@ -482,11 +482,28 @@
               firstPassiveSelected = true;
               await delay(1000);
             } else {
-              log('⚠️ Power Bracer not found on screen');
-              await delay(1000);
+              log('⚠️ Power Bracer not found on screen, skipping passive choice...');
+              const skipBtn = document.querySelector('#passive-screen .choice-skip-btn');
+              if (skipBtn) {
+                log('👉 Clicking Skip button');
+                skipBtn.click();
+                firstPassiveSelected = true;
+                await delay(1000);
+              } else {
+                await delay(1000);
+              }
             }
           } else {
-            await delay(500);
+            log('🔍 Subsequent passive screen active, skipping passive selection...');
+            await delay(200);
+            const skipBtn = document.querySelector('#passive-screen .choice-skip-btn');
+            if (skipBtn) {
+              log('👉 Clicking Skip button');
+              skipBtn.click();
+              await delay(1000);
+            } else {
+              await delay(500);
+            }
           }
         }
         
