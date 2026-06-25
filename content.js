@@ -342,6 +342,8 @@
   let firstPassiveSelected = false;
   let moneyFarmRuns = 0;
   let moneyFarmLoopActive = false;
+  let moneyFarmSpeed = 'turbo';
+
 
   /** Select the best clickable map node for Money Farm */
   function getBestMoneyFarmMapNode() {
@@ -448,9 +450,25 @@
     moneyFarmLoopActive = true;
     log('💰 Money Farm loop started');
     log(`  Starter: ${moneyFarmStarter}`);
+    log(`  Speed: ${moneyFarmSpeed}`);
     
     try {
       while (moneyFarmActive) {
+        // Set dynamic delays based on current speed setting
+        let clickDelay = 1000;
+        let renderDelay = 200;
+        let pollDelay = 500;
+
+        if (moneyFarmSpeed === 'fast') {
+          clickDelay = 500;
+          renderDelay = 150;
+          pollDelay = 250;
+        } else if (moneyFarmSpeed === 'turbo') {
+          clickDelay = 250;
+          renderDelay = 50;
+          pollDelay = 100;
+        }
+
         // ── Starter Screen ──
         if (isScreenActive('starter-screen')) {
           log('🔍 Starter screen active, selecting starter...');
@@ -461,7 +479,7 @@
             log(`🔄 New run started, reset firstPassiveSelected to false. Increment runs to ${moneyFarmRuns}`);
           }
           
-          await delay(200); // brief wait for render
+          await delay(renderDelay); // wait for render
           
           const dexCards = Array.from(document.querySelectorAll('#starter-choices .dex-card'));
           let targetCard = null;
@@ -476,10 +494,10 @@
           if (targetCard) {
             log(`👉 Clicking starter card: ${moneyFarmStarter}`);
             targetCard.click();
-            await delay(1000);
+            await delay(clickDelay);
           } else {
             log(`⚠️ Starter "${moneyFarmStarter}" not found in list`);
-            await delay(1000);
+            await delay(clickDelay);
           }
         }
         
@@ -487,7 +505,7 @@
         else if (isScreenActive('passive-screen')) {
           if (!firstPassiveSelected) {
             log('🔍 First passive screen active, selecting Power Bracer...');
-            await delay(200);
+            await delay(renderDelay);
             
             const itemCards = Array.from(document.querySelectorAll('#passive-choices .item-card'));
             let targetItem = null;
@@ -503,7 +521,7 @@
               log('👉 Clicking Power Bracer');
               targetItem.click();
               firstPassiveSelected = true;
-              await delay(1000);
+              await delay(clickDelay);
             } else {
               log('⚠️ Power Bracer not found on screen, skipping passive choice...');
               const skipBtn = document.querySelector('#passive-screen .choice-skip-btn');
@@ -511,21 +529,21 @@
                 log('👉 Clicking Skip button');
                 skipBtn.click();
                 firstPassiveSelected = true;
-                await delay(1000);
+                await delay(clickDelay);
               } else {
-                await delay(1000);
+                await delay(clickDelay);
               }
             }
           } else {
             log('🔍 Subsequent passive screen active, skipping passive selection...');
-            await delay(200);
+            await delay(renderDelay);
             const skipBtn = document.querySelector('#passive-screen .choice-skip-btn');
             if (skipBtn) {
               log('👉 Clicking Skip button');
               skipBtn.click();
-              await delay(1000);
+              await delay(clickDelay);
             } else {
-              await delay(500);
+              await delay(pollDelay);
             }
           }
         }
@@ -533,14 +551,14 @@
         // ── Game Over Screen (Play Again) ──
         else if (isScreenActive('gameover-screen')) {
           log('🔍 Game Over screen active, clicking Play Again...');
-          await delay(200);
+          await delay(renderDelay);
           const playAgainBtn = document.getElementById('btn-retry');
           if (playAgainBtn && playAgainBtn.offsetParent !== null) {
             log('👉 Clicking Play Again button');
             playAgainBtn.click();
-            await delay(1000);
+            await delay(clickDelay);
           } else {
-            await delay(500);
+            await delay(pollDelay);
           }
         }
 
@@ -550,72 +568,72 @@
           if (continueBtn && continueBtn.offsetParent !== null) {
             log('🔍 Defeat detected! Clicking Continue Battle button...');
             continueBtn.click();
-            await delay(1000);
+            await delay(clickDelay);
           } else {
-            await delay(500);
+            await delay(pollDelay);
           }
         }
 
         // ── Move Tutor Screen ──
         else if (document.getElementById('btn-skip-tutor') && document.getElementById('btn-skip-tutor').offsetParent !== null) {
           log('🔍 Move Tutor screen active or skip tutor button visible...');
-          await delay(200);
+          await delay(renderDelay);
           const skipBtn = document.getElementById('btn-skip-tutor');
           if (skipBtn && skipBtn.offsetParent !== null) {
             log('👉 Clicking Skip Tutor button');
             skipBtn.click();
-            await delay(1000);
+            await delay(clickDelay);
           } else {
-            await delay(500);
+            await delay(pollDelay);
           }
         }
 
         // ── Shiny Screen ──
         else if (isScreenActive('shiny-screen') || (document.getElementById('btn-skip-shiny') && document.getElementById('btn-skip-shiny').offsetParent !== null)) {
           log('🔍 Shiny screen active or skip shiny button visible...');
-          await delay(200);
+          await delay(renderDelay);
           const skipBtn = document.getElementById('btn-skip-shiny');
           if (skipBtn && skipBtn.offsetParent !== null) {
             log('👉 Clicking Skip Shiny button');
             skipBtn.click();
-            await delay(1000);
+            await delay(clickDelay);
           } else {
-            await delay(500);
+            await delay(pollDelay);
           }
         }
 
         // ── Item / Event Screen ──
         else if (isScreenActive('item-screen') || (document.getElementById('btn-skip-item') && document.getElementById('btn-skip-item').offsetParent !== null)) {
           log('🔍 Item/Event screen active or skip button visible...');
-          await delay(200);
+          await delay(renderDelay);
           const skipBtn = document.getElementById('btn-skip-item');
           if (skipBtn && skipBtn.offsetParent !== null) {
             log('👉 Clicking Skip button');
             skipBtn.click();
-            await delay(1000);
+            await delay(clickDelay);
           } else {
-            await delay(500);
+            await delay(pollDelay);
           }
         }
 
         // ── Catch Screen (Wild Pokemon) ──
         else if (isScreenActive('catch-screen') || (document.getElementById('btn-skip-catch') && document.getElementById('btn-skip-catch').offsetParent !== null)) {
           log('🔍 Catch screen active or skip catch button visible...');
-          await delay(200);
+          await delay(renderDelay);
           const skipBtn = document.getElementById('btn-skip-catch');
           if (skipBtn && skipBtn.offsetParent !== null) {
             log('👉 Clicking Skip (flee) button');
             skipBtn.click();
-            await delay(1000);
+            await delay(clickDelay);
           } else {
-            await delay(500);
+            await delay(pollDelay);
           }
         }
         
         // ── Map Screen ──
         else if (isScreenActive('map-screen')) {
           log('🔍 Map screen active, selecting best node...');
-          await delay(200); // brief wait for render
+          await delay(renderDelay); // wait for render
           
           const mapNode = getBestMoneyFarmMapNode();
           if (mapNode) {
@@ -631,15 +649,15 @@
             if (typeof clickTarget.click === 'function') {
               clickTarget.click();
             }
-            await delay(1000);
+            await delay(clickDelay);
           } else {
             log('⚠️ No clickable map node found');
-            await delay(500);
+            await delay(pollDelay);
           }
         }
         
         else {
-          await delay(300);
+          await delay(pollDelay);
         }
       }
     } catch (err) {
@@ -806,7 +824,7 @@
     chrome.storage.local.set({ contentScriptReady: true, contentScriptTimestamp: Date.now() });
   }
 
-  chrome.storage.local.get(['isRunning', 'targetPokemon', 'runCount', 'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns'], (data) => {
+  chrome.storage.local.get(['isRunning', 'targetPokemon', 'runCount', 'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns', 'moneyFarmSpeed'], (data) => {
     targetPokemon = data.targetPokemon || [];
     runCount = data.runCount || 0;
     isRunning = data.isRunning || false;
@@ -814,8 +832,9 @@
     moneyFarmActive = data.moneyFarmActive || false;
     moneyFarmStarter = data.moneyFarmStarter || 'Rayquaza';
     moneyFarmRuns = data.moneyFarmRuns || 0;
+    moneyFarmSpeed = data.moneyFarmSpeed || 'turbo';
 
-    log('Initialized', { isRunning, targetPokemon, runCount, moneyFarmActive, moneyFarmStarter, moneyFarmRuns });
+    log('Initialized', { isRunning, targetPokemon, runCount, moneyFarmActive, moneyFarmStarter, moneyFarmRuns, moneyFarmSpeed });
     sendHeartbeat();
 
     if (isRunning && targetPokemon.length > 0) {
@@ -880,6 +899,11 @@
     if (changes.moneyFarmRuns) {
       moneyFarmRuns = changes.moneyFarmRuns.newValue || 0;
       log('Money Farm runs updated:', moneyFarmRuns);
+    }
+
+    if (changes.moneyFarmSpeed) {
+      moneyFarmSpeed = changes.moneyFarmSpeed.newValue || 'turbo';
+      log('Money Farm speed updated:', moneyFarmSpeed);
     }
   });
 
@@ -1173,6 +1197,27 @@
       .badge-dot.searching { background: #2ed573; }
       .badge-dot.found { background: #ffa502; box-shadow: 0 0 4px #ffa502; }
       .badge-dot.error { background: #ff4757; }
+      .speed-btn {
+        flex: 1;
+        padding: 4px;
+        font-size: 10px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .speed-btn:hover {
+        color: var(--text-main);
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .speed-btn.active {
+        color: #fffa65;
+        border-color: #fffa65;
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: bold;
+      }
     `;
     shadow.appendChild(style);
 
@@ -1236,6 +1281,15 @@
               <input type="text" id="widget-money-starter-input" placeholder="z.B. Rayquaza" autocomplete="off" spellcheck="false">
             </div>
           </div>
+
+          <div class="targets-section" style="margin-top: 4px;">
+            <div class="section-title">Geschwindigkeit:</div>
+            <div class="speed-section" style="display: flex; gap: 4px; margin-top: 2px;">
+              <button class="speed-btn" id="speed-normal-btn" data-speed="normal">Normal</button>
+              <button class="speed-btn" id="speed-fast-btn" data-speed="fast">Schnell</button>
+              <button class="speed-btn" id="speed-turbo-btn" data-speed="turbo">Turbo</button>
+            </div>
+          </div>
           
           <button class="action-btn start" id="widget-money-action-btn">▶ Farm starten</button>
         </div>
@@ -1274,6 +1328,9 @@
     const moneyStatusDotEl = shadow.getElementById('widget-money-status-dot');
     const moneyStatusTextEl = shadow.getElementById('widget-money-status-text');
     const moneyRunsCountEl = shadow.getElementById('widget-money-runs-count');
+    const speedNormalBtn = shadow.getElementById('speed-normal-btn');
+    const speedFastBtn = shadow.getElementById('speed-fast-btn');
+    const speedTurboBtn = shadow.getElementById('speed-turbo-btn');
 
     // Tab switching logic
     const switchTab = (tabName) => {
@@ -1316,6 +1373,15 @@
         chrome.storage.local.set(updates);
       });
     });
+
+    // Money Farm Speed buttons listener
+    const handleSpeedClick = (speed) => {
+      chrome.storage.local.set({ moneyFarmSpeed: speed });
+    };
+
+    speedNormalBtn.addEventListener('click', () => handleSpeedClick('normal'));
+    speedFastBtn.addEventListener('click', () => handleSpeedClick('fast'));
+    speedTurboBtn.addEventListener('click', () => handleSpeedClick('turbo'));
 
     // ─── Drag and Drop Mechanics ───
     let dragStartX = 0;
@@ -1581,7 +1647,7 @@
       chrome.storage.local.get([
         'status', 'runCount', 'isRunning', 'targetPokemon', 'foundPokemon', 
         'widgetMinimized', 'widgetPosition', 'activeTab',
-        'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns'
+        'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns', 'moneyFarmSpeed'
       ], (data) => {
         // Sync active tab
         switchTab(data.activeTab || 'shiny');
@@ -1590,6 +1656,12 @@
         if (shadow.activeElement !== moneyStarterInput) {
           moneyStarterInput.value = data.moneyFarmStarter || 'Rayquaza';
         }
+
+        // Sync speed buttons active classes
+        const speed = data.moneyFarmSpeed || 'turbo';
+        speedNormalBtn.classList.toggle('active', speed === 'normal');
+        speedFastBtn.classList.toggle('active', speed === 'fast');
+        speedTurboBtn.classList.toggle('active', speed === 'turbo');
 
         updateWidgetUI(
           data.status || 'idle',
