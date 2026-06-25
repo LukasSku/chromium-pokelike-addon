@@ -342,7 +342,6 @@
   let firstPassiveSelected = false;
   let moneyFarmRuns = 0;
   let moneyFarmLoopActive = false;
-  let moneyFarmSpeed = 'turbo';
 
 
   /** Select the best clickable map node for Money Farm */
@@ -450,24 +449,12 @@
     moneyFarmLoopActive = true;
     log('💰 Money Farm loop started');
     log(`  Starter: ${moneyFarmStarter}`);
-    log(`  Speed: ${moneyFarmSpeed}`);
     
     try {
       while (moneyFarmActive) {
-        // Set dynamic delays based on current speed setting
-        let clickDelay = 1000;
-        let renderDelay = 200;
-        let pollDelay = 500;
-
-        if (moneyFarmSpeed === 'fast') {
-          clickDelay = 500;
-          renderDelay = 150;
-          pollDelay = 250;
-        } else if (moneyFarmSpeed === 'turbo') {
-          clickDelay = 250;
-          renderDelay = 50;
-          pollDelay = 100;
-        }
+        const clickDelay = 250;
+        const renderDelay = 50;
+        const pollDelay = 100;
 
         // ── Starter Screen ──
         if (isScreenActive('starter-screen')) {
@@ -677,6 +664,10 @@
     log('🚀 Automation loop started');
     log(`  Targets: [${targetPokemon.join(', ')}]`);
 
+    const renderDelay = 50;
+    const pollDelay = 100;
+    const actionDelay = 50;
+
     try {
       while (isRunning) {
         // ── Step 1: Wait for map screen ──
@@ -687,12 +678,12 @@
           await waitForScreen('map-screen', 60000);
         } catch (e) {
           log('⚠️ Map screen timeout, retrying...');
-          await delay(500);
+          await delay(pollDelay);
           continue;
         }
 
         // Brief wait for map nodes to render
-        await delay(150);
+        await delay(renderDelay);
 
         if (!isRunning) break;
 
@@ -700,7 +691,7 @@
         const mapNode = getLeftmostMapNode();
         if (!mapNode) {
           log('⚠️ No clickable map node found, waiting...');
-          await delay(500);
+          await delay(pollDelay);
           continue;
         }
 
@@ -748,7 +739,7 @@
         if (activeScreen === 'catch-screen') {
           // Wait for Pokémon cards to render
           await waitForPokeNames(1500);
-          await delay(100);
+          await delay(actionDelay);
 
           if (!isRunning) break;
 
@@ -778,7 +769,7 @@
           }
         } else {
           // Non-catch screen – skip immediately
-          await delay(100);
+          await delay(actionDelay);
         }
 
         if (!isRunning) break;
@@ -824,7 +815,7 @@
     chrome.storage.local.set({ contentScriptReady: true, contentScriptTimestamp: Date.now() });
   }
 
-  chrome.storage.local.get(['isRunning', 'targetPokemon', 'runCount', 'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns', 'moneyFarmSpeed'], (data) => {
+  chrome.storage.local.get(['isRunning', 'targetPokemon', 'runCount', 'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns'], (data) => {
     targetPokemon = data.targetPokemon || [];
     runCount = data.runCount || 0;
     isRunning = data.isRunning || false;
@@ -832,9 +823,8 @@
     moneyFarmActive = data.moneyFarmActive || false;
     moneyFarmStarter = data.moneyFarmStarter || 'Rayquaza';
     moneyFarmRuns = data.moneyFarmRuns || 0;
-    moneyFarmSpeed = data.moneyFarmSpeed || 'turbo';
 
-    log('Initialized', { isRunning, targetPokemon, runCount, moneyFarmActive, moneyFarmStarter, moneyFarmRuns, moneyFarmSpeed });
+    log('Initialized', { isRunning, targetPokemon, runCount, moneyFarmActive, moneyFarmStarter, moneyFarmRuns });
     sendHeartbeat();
 
     if (isRunning && targetPokemon.length > 0) {
@@ -901,10 +891,7 @@
       log('Money Farm runs updated:', moneyFarmRuns);
     }
 
-    if (changes.moneyFarmSpeed) {
-      moneyFarmSpeed = changes.moneyFarmSpeed.newValue || 'turbo';
-      log('Money Farm speed updated:', moneyFarmSpeed);
-    }
+
   });
 
   // ─────────────────────────────────────────────────────────
@@ -1194,30 +1181,7 @@
         border: 1.5px solid var(--bg-panel);
         pointer-events: none;
       }
-      .badge-dot.searching { background: #2ed573; }
-      .badge-dot.found { background: #ffa502; box-shadow: 0 0 4px #ffa502; }
       .badge-dot.error { background: #ff4757; }
-      .speed-btn {
-        flex: 1;
-        padding: 4px;
-        font-size: 10px;
-        border-radius: 4px;
-        border: 1px solid var(--border-color);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      .speed-btn:hover {
-        color: var(--text-main);
-        background: rgba(255, 255, 255, 0.1);
-      }
-      .speed-btn.active {
-        color: #fffa65;
-        border-color: #fffa65;
-        background: rgba(255, 255, 255, 0.1);
-        font-weight: bold;
-      }
     `;
     shadow.appendChild(style);
 
@@ -1281,15 +1245,6 @@
               <input type="text" id="widget-money-starter-input" placeholder="z.B. Rayquaza" autocomplete="off" spellcheck="false">
             </div>
           </div>
-
-          <div class="targets-section" style="margin-top: 4px;">
-            <div class="section-title">Geschwindigkeit:</div>
-            <div class="speed-section" style="display: flex; gap: 4px; margin-top: 2px;">
-              <button class="speed-btn" id="speed-normal-btn" data-speed="normal">Normal</button>
-              <button class="speed-btn" id="speed-fast-btn" data-speed="fast">Schnell</button>
-              <button class="speed-btn" id="speed-turbo-btn" data-speed="turbo">Turbo</button>
-            </div>
-          </div>
           
           <button class="action-btn start" id="widget-money-action-btn">▶ Farm starten</button>
         </div>
@@ -1328,9 +1283,7 @@
     const moneyStatusDotEl = shadow.getElementById('widget-money-status-dot');
     const moneyStatusTextEl = shadow.getElementById('widget-money-status-text');
     const moneyRunsCountEl = shadow.getElementById('widget-money-runs-count');
-    const speedNormalBtn = shadow.getElementById('speed-normal-btn');
-    const speedFastBtn = shadow.getElementById('speed-fast-btn');
-    const speedTurboBtn = shadow.getElementById('speed-turbo-btn');
+
 
     // Tab switching logic
     const switchTab = (tabName) => {
@@ -1374,14 +1327,7 @@
       });
     });
 
-    // Money Farm Speed buttons listener
-    const handleSpeedClick = (speed) => {
-      chrome.storage.local.set({ moneyFarmSpeed: speed });
-    };
 
-    speedNormalBtn.addEventListener('click', () => handleSpeedClick('normal'));
-    speedFastBtn.addEventListener('click', () => handleSpeedClick('fast'));
-    speedTurboBtn.addEventListener('click', () => handleSpeedClick('turbo'));
 
     // ─── Drag and Drop Mechanics ───
     let dragStartX = 0;
@@ -1647,7 +1593,7 @@
       chrome.storage.local.get([
         'status', 'runCount', 'isRunning', 'targetPokemon', 'foundPokemon', 
         'widgetMinimized', 'widgetPosition', 'activeTab',
-        'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns', 'moneyFarmSpeed'
+        'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns'
       ], (data) => {
         // Sync active tab
         switchTab(data.activeTab || 'shiny');
@@ -1656,12 +1602,6 @@
         if (shadow.activeElement !== moneyStarterInput) {
           moneyStarterInput.value = data.moneyFarmStarter || 'Rayquaza';
         }
-
-        // Sync speed buttons active classes
-        const speed = data.moneyFarmSpeed || 'turbo';
-        speedNormalBtn.classList.toggle('active', speed === 'normal');
-        speedFastBtn.classList.toggle('active', speed === 'fast');
-        speedTurboBtn.classList.toggle('active', speed === 'turbo');
 
         updateWidgetUI(
           data.status || 'idle',
