@@ -616,6 +616,20 @@
             await delay(pollDelay);
           }
         }
+
+        // ── Swap Screen (New Pokemon Swap / Legendary) ──
+        else if (isScreenActive('swap-screen') || (document.getElementById('btn-cancel-swap') && document.getElementById('btn-cancel-swap').offsetParent !== null)) {
+          log('🔍 Swap screen active or cancel swap button visible...');
+          await delay(renderDelay);
+          const cancelBtn = document.getElementById('btn-cancel-swap');
+          if (cancelBtn && cancelBtn.offsetParent !== null) {
+            log('👉 Clicking Keep Team As-Is button');
+            cancelBtn.click();
+            await delay(clickDelay);
+          } else {
+            await delay(pollDelay);
+          }
+        }
         
         // ── Map Screen ──
         else if (isScreenActive('map-screen')) {
@@ -722,7 +736,8 @@
             'item-screen',
             'trade-screen',
             'shiny-screen',
-            'stat-buff-screen'
+            'stat-buff-screen',
+            'swap-screen'
           ], 30000);
         } catch (e) {
           log('⚠️ No encounter screen appeared, resetting...');
