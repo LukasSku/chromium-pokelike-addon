@@ -543,6 +543,20 @@
             await delay(500);
           }
         }
+
+        // ── Shiny Screen ──
+        else if (isScreenActive('shiny-screen') || (document.getElementById('btn-skip-shiny') && document.getElementById('btn-skip-shiny').offsetParent !== null)) {
+          log('🔍 Shiny screen active or skip shiny button visible...');
+          await delay(200);
+          const skipBtn = document.getElementById('btn-skip-shiny');
+          if (skipBtn && skipBtn.offsetParent !== null) {
+            log('👉 Clicking Skip Shiny button');
+            skipBtn.click();
+            await delay(1000);
+          } else {
+            await delay(500);
+          }
+        }
         
         else {
           await delay(300);
