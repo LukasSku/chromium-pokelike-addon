@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Pokelike Shiny Hunter",
+  "name": "Pokelike Helper",
   "version": "1.0.0",
-  "description": "Automatische Shiny-Pokémon-Suche für pokelike.xyz – findet deine gewünschten Shinies!",
+  "description": "Automatischer Assistent für pokelike.xyz – unterstützt Shiny-Suche und Money-Farming!",
   "permissions": [
     "storage"
   ],

@@ -335,7 +335,231 @@
   }
 
   // ─────────────────────────────────────────────────────────
-  // 6. Main automation loop
+  // 6. Money Farm automation loop
+  // ─────────────────────────────────────────────────────────
+  let moneyFarmActive = false;
+  let moneyFarmStarter = 'Rayquaza';
+  let firstPassiveSelected = false;
+  let moneyFarmRuns = 0;
+  let moneyFarmLoopActive = false;
+
+  /** Select the best clickable map node for Money Farm */
+  function getBestMoneyFarmMapNode() {
+    const nodes = Array.from(document.querySelectorAll('g.map-node.map-node--clickable'));
+    if (nodes.length === 0) return null;
+
+    // Bevorzugte Keywords (case-insensitive)
+    const priorityKeywords = [
+      'grass',
+      'fisherman',
+      'firebreather',
+      'grunt',
+      'team rocket grunt',
+      'gentleman',
+      'scientist',
+      'ace',
+      'ace trainer',
+      'hiker',
+      'officer'
+    ];
+
+    // Helper to get coordinates
+    const getCoords = (el) => {
+      let x = 0, y = 0;
+      const tx = el.style.getPropertyValue('--node-tx');
+      const ty = el.style.getPropertyValue('--node-ty');
+      if (tx && ty) {
+        x = parseFloat(tx);
+        y = parseFloat(ty);
+      }
+      if (isNaN(x) || isNaN(y)) {
+        const transform = el.getAttribute('transform');
+        if (transform) {
+          const match = transform.match(/translate\(([^,\s]+)[,\s]+([^)]+)\)/);
+          if (match) {
+            x = parseFloat(match[1]);
+            y = parseFloat(match[2]);
+          }
+        }
+      }
+      if (isNaN(x) || isNaN(y)) {
+        const rect = el.getBoundingClientRect();
+        x = rect.left;
+        y = rect.top;
+      }
+      return { x, y };
+    };
+
+    // Helper to check if node contains prioritized image
+    const isPriorityNode = (el) => {
+      const img = el.querySelector('image');
+      if (!img) return false;
+      const href = img.getAttribute('href') || img.getAttribute('xlink:href') || '';
+      const hrefLower = href.toLowerCase();
+      
+      return priorityKeywords.some(keyword => hrefLower.includes(keyword));
+    };
+
+    // Split into priority and normal nodes
+    const priorityNodes = nodes.filter(isPriorityNode);
+    const selectedList = priorityNodes.length > 0 ? priorityNodes : nodes;
+
+    log(`🔍 Money Farm map choice: ${nodes.length} clickable node(s), ${priorityNodes.length} priority node(s)`);
+
+    // Sort by Y coordinate descending (furthest down), then X coordinate ascending (leftmost)
+    selectedList.sort((a, b) => {
+      const coordsA = getCoords(a);
+      const coordsB = getCoords(b);
+      
+      if (Math.abs(coordsA.y - coordsB.y) > 5) {
+        return coordsB.y - coordsA.y; // Descending order (highest Y first, i.e., further down)
+      }
+      return coordsA.x - coordsB.x; // Ascending order (leftmost first)
+    });
+
+    return selectedList[0];
+  }
+
+  async function runMoneyFarmLoop() {
+    if (moneyFarmLoopActive) return;
+    moneyFarmLoopActive = true;
+    log('💰 Money Farm loop started');
+    log(`  Starter: ${moneyFarmStarter}`);
+    
+    try {
+      while (moneyFarmActive) {
+        // ── Starter Screen ──
+        if (isScreenActive('starter-screen')) {
+          log('🔍 Starter screen active, selecting starter...');
+          if (firstPassiveSelected) {
+            firstPassiveSelected = false;
+            moneyFarmRuns++;
+            chrome.storage.local.set({ moneyFarmRuns });
+            log(`🔄 New run started, reset firstPassiveSelected to false. Increment runs to ${moneyFarmRuns}`);
+          }
+          
+          await delay(200); // brief wait for render
+          
+          const dexCards = Array.from(document.querySelectorAll('#starter-choices .dex-card'));
+          let targetCard = null;
+          for (const card of dexCards) {
+            const nameEl = card.querySelector('.dex-name');
+            if (nameEl && nameEl.textContent.trim().toLowerCase() === moneyFarmStarter.toLowerCase()) {
+              targetCard = card;
+              break;
+            }
+          }
+          
+          if (targetCard) {
+            log(`👉 Clicking starter card: ${moneyFarmStarter}`);
+            targetCard.click();
+            await delay(1000);
+          } else {
+            log(`⚠️ Starter "${moneyFarmStarter}" not found in list`);
+            await delay(1000);
+          }
+        }
+        
+        // ── Passive Screen ──
+        else if (isScreenActive('passive-screen')) {
+          if (!firstPassiveSelected) {
+            log('🔍 First passive screen active, selecting Power Bracer...');
+            await delay(200);
+            
+            const itemCards = Array.from(document.querySelectorAll('#passive-choices .item-card'));
+            let targetItem = null;
+            for (const card of itemCards) {
+              const nameEl = card.querySelector('.item-name');
+              if (nameEl && nameEl.textContent.trim().toLowerCase() === 'power bracer') {
+                targetItem = card;
+                break;
+              }
+            }
+            
+            if (targetItem) {
+              log('👉 Clicking Power Bracer');
+              targetItem.click();
+              firstPassiveSelected = true;
+              await delay(1000);
+            } else {
+              log('⚠️ Power Bracer not found on screen');
+              await delay(1000);
+            }
+          } else {
+            await delay(500);
+          }
+        }
+        
+        // ── Map Screen ──
+        else if (isScreenActive('map-screen')) {
+          log('🔍 Map screen active, selecting best node...');
+          await delay(200); // brief wait for render
+          
+          const mapNode = getBestMoneyFarmMapNode();
+          if (mapNode) {
+            log('🗺️ Clicking best map node...');
+            const clickRect = mapNode.querySelector('rect[fill="transparent"]');
+            const clickTarget = clickRect || mapNode;
+
+            const eventOpts = { bubbles: true, cancelable: true, view: window };
+            clickTarget.dispatchEvent(new PointerEvent('pointerdown', eventOpts));
+            clickTarget.dispatchEvent(new PointerEvent('pointerup', eventOpts));
+            clickTarget.dispatchEvent(new MouseEvent('click', eventOpts));
+
+            if (typeof clickTarget.click === 'function') {
+              clickTarget.click();
+            }
+            await delay(1000);
+          } else {
+            log('⚠️ No clickable map node found');
+            await delay(500);
+          }
+        }
+
+        // ── Catch Screen (Wild Pokemon) ──
+        else if (isScreenActive('catch-screen')) {
+          log('🔍 Catch screen active, clicking skip (flee)...');
+          await delay(200);
+          const skipBtn = document.getElementById('btn-skip-catch');
+          if (skipBtn) {
+            log('👉 Clicking Skip (flee) button');
+            skipBtn.click();
+            await delay(1000);
+          } else {
+            log('⚠️ Skip catch button not found on catch screen');
+            await delay(500);
+          }
+        }
+
+        // ── Item / Event Screen ──
+        else if (isScreenActive('item-screen')) {
+          log('🔍 Item screen active, checking for skip button...');
+          await delay(200);
+          const skipBtn = document.getElementById('btn-skip-item');
+          if (skipBtn) {
+            log('👉 Clicking Skip item button');
+            skipBtn.click();
+            await delay(1000);
+          } else {
+            log('⚠️ Skip button not found on item screen');
+            await delay(500);
+          }
+        }
+        
+        else {
+          await delay(300);
+        }
+      }
+    } catch (err) {
+      log('💥 Money Farm loop error:', err);
+    }
+    
+    moneyFarmLoopActive = false;
+    log('⏹️ Money Farm loop ended');
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // 7. Main automation loop (Shiny Hunter)
   // ─────────────────────────────────────────────────────────
   async function runLoop() {
     if (loopActive) return;
@@ -490,16 +714,24 @@
     chrome.storage.local.set({ contentScriptReady: true, contentScriptTimestamp: Date.now() });
   }
 
-  chrome.storage.local.get(['isRunning', 'targetPokemon', 'runCount'], (data) => {
+  chrome.storage.local.get(['isRunning', 'targetPokemon', 'runCount', 'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns'], (data) => {
     targetPokemon = data.targetPokemon || [];
     runCount = data.runCount || 0;
     isRunning = data.isRunning || false;
+    
+    moneyFarmActive = data.moneyFarmActive || false;
+    moneyFarmStarter = data.moneyFarmStarter || 'Rayquaza';
+    moneyFarmRuns = data.moneyFarmRuns || 0;
 
-    log('Initialized', { isRunning, targetPokemon, runCount });
+    log('Initialized', { isRunning, targetPokemon, runCount, moneyFarmActive, moneyFarmStarter, moneyFarmRuns });
     sendHeartbeat();
 
     if (isRunning && targetPokemon.length > 0) {
       runLoop();
+    }
+
+    if (moneyFarmActive) {
+      runMoneyFarmLoop();
     }
   });
 
@@ -528,12 +760,34 @@
       isRunning = changes.isRunning.newValue;
 
       if (isRunning && !wasRunning && !loopActive) {
-        log('▶ Starting from popup trigger');
+        log('▶ Starting Shiny Hunter loop');
         runLoop();
       } else if (!isRunning && wasRunning) {
-        log('⏹ Stopped from popup');
+        log('⏹ Stopped Shiny Hunter loop');
         updateBadge('idle');
       }
+    }
+
+    if (changes.moneyFarmActive) {
+      const wasActive = moneyFarmActive;
+      moneyFarmActive = changes.moneyFarmActive.newValue;
+
+      if (moneyFarmActive && !wasActive && !moneyFarmLoopActive) {
+        log('▶ Starting Money Farm loop');
+        runMoneyFarmLoop();
+      } else if (!moneyFarmActive && wasActive) {
+        log('⏹ Stopped Money Farm loop');
+      }
+    }
+
+    if (changes.moneyFarmStarter) {
+      moneyFarmStarter = changes.moneyFarmStarter.newValue || 'Rayquaza';
+      log('Money Farm starter updated:', moneyFarmStarter);
+    }
+
+    if (changes.moneyFarmRuns) {
+      moneyFarmRuns = changes.moneyFarmRuns.newValue || 0;
+      log('Money Farm runs updated:', moneyFarmRuns);
     }
   });
 
@@ -610,6 +864,33 @@
       }
       .minimize-btn:hover {
         color: var(--text-main);
+      }
+      .tabs-nav {
+        display: flex;
+        border-bottom: 1px solid var(--border-color);
+        background: rgba(0, 0, 0, 0.15);
+      }
+      .tab-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 8px;
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        letter-spacing: 0.5px;
+      }
+      .tab-btn:hover {
+        color: var(--text-main);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .tab-btn.active {
+        color: #fffa65;
+        border-bottom: 2px solid #fffa65;
+        background: rgba(255, 255, 255, 0.04);
       }
       .body {
         padding: 12px;
@@ -809,11 +1090,17 @@
     htmlContainer.innerHTML = `
       <div class="panel" id="widget-panel" style="display: none;">
         <div class="header">
-          <div class="header-title">★ SHINY HUNTER</div>
+          <div class="header-title">★ POKELIKE HELPER</div>
           <button class="minimize-btn" id="widget-minimize-btn" title="Minimieren">✕</button>
         </div>
         
-        <div class="body">
+        <div class="tabs-nav">
+          <button class="tab-btn active" id="tab-shiny-btn">Shiny Hunt</button>
+          <button class="tab-btn" id="tab-money-btn">Money Farm</button>
+        </div>
+        
+        <!-- Shiny Hunt Tab content -->
+        <div class="body" id="tab-content-shiny">
           <div class="status-box">
             <div class="status-row">
               <span class="status-dot idle" id="widget-status-dot"></span>
@@ -837,9 +1124,32 @@
           
           <button class="action-btn start" id="widget-action-btn">▶ Suche starten</button>
         </div>
+
+        <!-- Money Farm Tab content -->
+        <div class="body" id="tab-content-money" style="display: none;">
+          <div class="status-box">
+            <div class="status-row">
+              <span class="status-dot idle" id="widget-money-status-dot"></span>
+              <span id="widget-money-status-text">Bereit</span>
+            </div>
+            <div class="runs-row">
+              <span>Runs:</span>
+              <strong id="widget-money-runs-count">0</strong>
+            </div>
+          </div>
+          
+          <div class="targets-section">
+            <div class="section-title">Starter Pokémon:</div>
+            <div class="add-section">
+              <input type="text" id="widget-money-starter-input" placeholder="z.B. Rayquaza" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+          
+          <button class="action-btn start" id="widget-money-action-btn">▶ Farm starten</button>
+        </div>
       </div>
 
-      <div class="collapsed-btn" id="widget-collapsed-btn" style="display: none;" title="Shiny Hunter öffnen">
+      <div class="collapsed-btn" id="widget-collapsed-btn" style="display: none;" title="Helper öffnen">
         ★
         <span class="badge-dot" id="widget-badge-dot"></span>
       </div>
@@ -859,6 +1169,61 @@
     const statusTextEl = shadow.getElementById('widget-status-text');
     const runsCountEl = shadow.getElementById('widget-runs-count');
     const badgeDotEl = shadow.getElementById('widget-badge-dot');
+
+    // Tab Navigation DOM Elements
+    const tabShinyBtn = shadow.getElementById('tab-shiny-btn');
+    const tabMoneyBtn = shadow.getElementById('tab-money-btn');
+    const tabContentShiny = shadow.getElementById('tab-content-shiny');
+    const tabContentMoney = shadow.getElementById('tab-content-money');
+
+    // Money Farm DOM Elements
+    const moneyActionBtn = shadow.getElementById('widget-money-action-btn');
+    const moneyStarterInput = shadow.getElementById('widget-money-starter-input');
+    const moneyStatusDotEl = shadow.getElementById('widget-money-status-dot');
+    const moneyStatusTextEl = shadow.getElementById('widget-money-status-text');
+    const moneyRunsCountEl = shadow.getElementById('widget-money-runs-count');
+
+    // Tab switching logic
+    const switchTab = (tabName) => {
+      if (tabName === 'shiny') {
+        tabShinyBtn.classList.add('active');
+        tabMoneyBtn.classList.remove('active');
+        tabContentShiny.style.display = 'flex';
+        tabContentMoney.style.display = 'none';
+      } else {
+        tabShinyBtn.classList.remove('active');
+        tabMoneyBtn.classList.add('active');
+        tabContentShiny.style.display = 'none';
+        tabContentMoney.style.display = 'flex';
+      }
+    };
+
+    tabShinyBtn.addEventListener('click', () => {
+      switchTab('shiny');
+      chrome.storage.local.set({ activeTab: 'shiny' });
+    });
+
+    tabMoneyBtn.addEventListener('click', () => {
+      switchTab('money');
+      chrome.storage.local.set({ activeTab: 'money' });
+    });
+
+    // Money Farm input listener
+    moneyStarterInput.addEventListener('input', () => {
+      chrome.storage.local.set({ moneyFarmStarter: moneyStarterInput.value.trim() });
+    });
+
+    // Money Farm Toggle button
+    moneyActionBtn.addEventListener('click', () => {
+      chrome.storage.local.get(['moneyFarmActive'], (res) => {
+        const nextActive = !res.moneyFarmActive;
+        const updates = { moneyFarmActive: nextActive };
+        if (nextActive) {
+          updates.isRunning = false; // Stop Shiny Hunter if running
+        }
+        chrome.storage.local.set(updates);
+      });
+    });
 
     // ─── Drag and Drop Mechanics ───
     let dragStartX = 0;
@@ -881,7 +1246,7 @@
       if (e.button !== 0) return; // Only left mouse button
 
       const tagName = e.target.tagName.toLowerCase();
-      if (tagName === 'button' || tagName === 'input' || e.target.classList.contains('remove-tag')) {
+      if (tagName === 'button' || tagName === 'input' || e.target.classList.contains('remove-tag') || e.target.classList.contains('tab-btn')) {
         return;
       }
 
@@ -980,6 +1345,7 @@
         if (nextRunning) {
           updates.status = 'searching';
           updates.foundPokemon = null;
+          updates.moneyFarmActive = false; // Stop Money Farm if running
           if (res.status === 'found') {
             updates.runCount = 0;
           }
@@ -1016,7 +1382,7 @@
     }
 
     // Update Widget DOM elements and position
-    function updateWidgetUI(status, runs, isRunningVal, list, foundPoke, minimized, pos) {
+    function updateWidgetUI(status, runs, isRunningVal, list, foundPoke, minimized, pos, moneyFarmActiveVal, moneyFarmStarterVal, moneyFarmRunsVal) {
       if (minimized) {
         widgetPanel.style.display = 'none';
         collapsedBtn.style.display = 'flex';
@@ -1027,6 +1393,7 @@
 
       renderWidgetTargets(list);
       runsCountEl.textContent = runs || 0;
+      moneyRunsCountEl.textContent = moneyFarmRunsVal || 0;
 
       // Position container based on state and storage
       const w = minimized ? 42 : 250;
@@ -1045,7 +1412,7 @@
       container.style.left = constrained.x + 'px';
       container.style.right = 'auto';
 
-      // Status updates
+      // Status updates for Shiny Hunt
       statusDotEl.className = 'status-dot';
       badgeDotEl.className = 'badge-dot';
 
@@ -1075,7 +1442,22 @@
         actionBtn.innerHTML = '▶ Suche starten';
       }
 
-      // Disable action button if targets are empty and not currently running
+      // Status updates for Money Farm
+      moneyStatusDotEl.className = 'status-dot';
+      if (moneyFarmActiveVal) {
+        moneyStatusDotEl.classList.add('searching');
+        badgeDotEl.className = 'badge-dot searching';
+        moneyStatusTextEl.textContent = 'Farming...';
+        moneyActionBtn.className = 'action-btn stop';
+        moneyActionBtn.innerHTML = '■ Farm stoppen';
+      } else {
+        moneyStatusDotEl.classList.add('idle');
+        moneyStatusTextEl.textContent = 'Bereit';
+        moneyActionBtn.className = 'action-btn start';
+        moneyActionBtn.innerHTML = '▶ Farm starten';
+      }
+
+      // Disable Shiny Hunt action button if targets are empty and not currently running
       if (!isRunningVal && (!list || list.length === 0)) {
         actionBtn.disabled = true;
         actionBtn.title = 'Füge zuerst Ziele hinzu';
@@ -1087,11 +1469,36 @@
         actionBtn.style.opacity = '1';
         actionBtn.style.cursor = 'pointer';
       }
+
+      // Disable Money Farm action button if starter is empty
+      if (!moneyFarmActiveVal && !moneyFarmStarterVal) {
+        moneyActionBtn.disabled = true;
+        moneyActionBtn.title = 'Füge zuerst einen Starter hinzu';
+        moneyActionBtn.style.opacity = '0.5';
+        moneyActionBtn.style.cursor = 'not-allowed';
+      } else {
+        moneyActionBtn.disabled = false;
+        moneyActionBtn.title = '';
+        moneyActionBtn.style.opacity = '1';
+        moneyActionBtn.style.cursor = 'pointer';
+      }
     }
 
     // Sync widget initially and on storage changes
     function syncWidget() {
-      chrome.storage.local.get(['status', 'runCount', 'isRunning', 'targetPokemon', 'foundPokemon', 'widgetMinimized', 'widgetPosition'], (data) => {
+      chrome.storage.local.get([
+        'status', 'runCount', 'isRunning', 'targetPokemon', 'foundPokemon', 
+        'widgetMinimized', 'widgetPosition', 'activeTab',
+        'moneyFarmActive', 'moneyFarmStarter', 'moneyFarmRuns'
+      ], (data) => {
+        // Sync active tab
+        switchTab(data.activeTab || 'shiny');
+
+        // Sync input field for Money Farm starter (only if not focused)
+        if (shadow.activeElement !== moneyStarterInput) {
+          moneyStarterInput.value = data.moneyFarmStarter || 'Rayquaza';
+        }
+
         updateWidgetUI(
           data.status || 'idle',
           data.runCount || 0,
@@ -1099,7 +1506,10 @@
           data.targetPokemon || [],
           data.foundPokemon,
           data.widgetMinimized || false,
-          data.widgetPosition
+          data.widgetPosition,
+          data.moneyFarmActive || false,
+          data.moneyFarmStarter || 'Rayquaza',
+          data.moneyFarmRuns || 0
         );
       });
     }
